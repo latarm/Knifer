@@ -9,9 +9,7 @@ public class ThrowSystem : MonoBehaviour
     public Transform ThrowPoint;
 
     private GameObject _knifeToThrow;
-    private float _interpolateAmount;
-    MaskableGraphic _graphic;
-    
+    private float _interpolateAmount;    
 
     void Start()
     {
@@ -23,9 +21,7 @@ public class ThrowSystem : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Alpha1) && ThrowPoint != null && KnifePrefab != null && _knifeToThrow!=null)
         {
-            _knifeToThrow.GetComponent<KnifeMove>().SetSpeed(15f);
-
-            _knifeToThrow.GetComponent<KnifeMove>().SetForce(15f);
+            _knifeToThrow.GetComponent<KnifeMove>().Speed=15f;
 
             _knifeToThrow = null;
         }
@@ -33,22 +29,18 @@ public class ThrowSystem : MonoBehaviour
 
     IEnumerator SpawnKnifeRoutine()
     {
-        while (GameController.Instance.IsGameContinued)
+        while (GameController.Instance.IsGameStarted)
         {
-            if (_knifeToThrow == null)
+            if (_knifeToThrow == null )
             {
-                yield return new WaitForSeconds(0.15f);
+                yield return new WaitForSeconds(0.25f);
 
-                _knifeToThrow = Instantiate(KnifePrefab, ThrowPoint.position-Vector3.up*(-1f), Quaternion.identity, ThrowPoint);
-
-                //_interpolateAmount += Time.deltaTime*5f;
-
-                //_knifeToThrow.transform.position = Vector2.Lerp(transform.position, ThrowPoint.position, _interpolateAmount);
+                if (GameController.Instance.IsGameStarted)
+                    _knifeToThrow = Instantiate(KnifePrefab, ThrowPoint.position, Quaternion.identity, ThrowPoint);
 
             }
             else
             {
-                //_interpolateAmount = 0f;
                 yield return null;
             }
         }

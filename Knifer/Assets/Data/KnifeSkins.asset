@@ -12,4 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8471680d0911e4c45aeae9b21206e91a, type: 3}
   m_Name: KnifeSkins
   m_EditorClassIdentifier: 
-  KnifeSkins: []
+  KnifeSkins:
+  - {fileID: 21300000, guid: eea82331ecc2e214ba31c04c11de3186, type: 3}
