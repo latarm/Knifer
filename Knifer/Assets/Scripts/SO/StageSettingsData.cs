@@ -7,6 +7,7 @@ public class StageSettingsData : ScriptableObject
 {
     public bool IsBoss;
     public Sprite WoodSkin;
+    public Texture WoodParts;
     public float WoodRotationSpeed;
     public float TimeOfRotationSlowing;
     public int KnifesInWoodMinCount;

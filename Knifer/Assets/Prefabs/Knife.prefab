@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7656096710016383046}
   - component: {fileID: 5442295722360839485}
   - component: {fileID: 3951548385853180799}
+  - component: {fileID: 8903853331561908759}
   m_Layer: 0
   m_Name: Knife
   m_TagString: Knife
@@ -29,7 +30,7 @@ Transform:
   m_GameObject: {fileID: 7656096710016383043}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 0.9, z: 1}
+  m_LocalScale: {x: 1.5, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -118,7 +119,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ca4658f904757942833eaf5b546f785, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  VFX_Hit: {fileID: 7834979530406915003, guid: d650ed407fa601f4691cb9213a9e2121, type: 3}
+  _knifeInWood: 0
 --- !u!60 &3951548385853180799
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -144,8 +145,27 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 0.06, y: 0.46}
-      - {x: 0.06, y: -0.75}
-      - {x: -0.06, y: -0.75}
-      - {x: -0.06, y: 0.46}
+    - - {x: 0.05, y: 0}
+      - {x: 0.05, y: -0.75}
+      - {x: -0.05, y: -0.75}
+      - {x: -0.05, y: 0}
       - {x: 0, y: 0.725}
+--- !u!95 &8903853331561908759
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7656096710016383043}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 2b9f38a7c149d7b46a2978c096555030, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0

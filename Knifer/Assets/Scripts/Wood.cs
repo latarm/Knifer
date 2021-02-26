@@ -5,26 +5,79 @@ using UnityEngine;
 public class Wood : MonoBehaviour
 {
     public SpriteRenderer WoodSkin;
-    public SpriteMask WoodSkinMask;
+    public GameObject WoodSkinMask;
     public GameObject ApplePrefab;
     public GameObject KnifePrefab;
+    public Material WoodCrackMaterial;
 
-    Sprite _woodSkin;
     Animator _animator;
     StageSettingsData _stageSettings;
     bool _readyToAnimation;
+    float _rotationSpeed;
+    float _deltaTime=0f;
+    float _baseSpeed;
+    float _targetSpeed;
 
-    private void Start()
+    public void SetWood()
     {
         _readyToAnimation = false;
         _animator = GetComponent<Animator>();
 
-        SetWood();
+        _stageSettings = GameController.Instance.CurrentStageSettings;
+
+        WoodCrackMaterial.mainTexture = _stageSettings.WoodParts;
+        _baseSpeed = _stageSettings.WoodRotationSpeed;
+        _targetSpeed = 0;
+
+        if (WoodSkin != null)
+            WoodSkin.sprite = _stageSettings.WoodSkin;
+        if (WoodSkinMask != null)
+            WoodSkinMask.GetComponent<SpriteMask>().sprite = _stageSettings.WoodSkin;
+
+        StartCoroutine(ReadyToAnimRoutine());
+
+        SpawnObject(KnifePrefab, _stageSettings.KnifesInWoodMinCount, _stageSettings.KnifesInWoodMaxCount, _stageSettings.AppleAppearChance);
+        SpawnObject(ApplePrefab, _stageSettings.AppleAppearChance);
+
+        StartCoroutine(RotateWoodRoutine());
+
+        GameController.Instance.IsStageComplited = false;
     }
 
-    void Update()
+    IEnumerator RotateWoodRoutine()
     {
-        transform.Rotate(0, 0, _stageSettings.WoodRotationSpeed);
+        while(GameController.Instance.IsGameStarted)
+        {
+            RotateWood();
+
+            yield return null;
+        }
+    }
+
+    void RotateWood()
+    {
+        _deltaTime += Time.deltaTime / _stageSettings.TimeOfRotationSlowing;
+
+        if (_deltaTime >= 1f)
+        {
+            _deltaTime = 0f;
+            ChangeRotationDirection();
+        }
+
+        transform.Rotate(0, 0, Mathf.Lerp(_baseSpeed, _targetSpeed, _deltaTime));
+    }
+
+    void ChangeRotationDirection()
+    {
+        float chanceToChangeDirection = Random.Range(0, 100f);
+        
+        float tmp = _baseSpeed;
+        _baseSpeed = _targetSpeed;
+
+        if (chanceToChangeDirection >= 50f)
+            _targetSpeed = -tmp;
+        else
+            _targetSpeed = tmp;
     }
 
     public void HitImpact()
@@ -33,22 +86,8 @@ public class Wood : MonoBehaviour
             _animator.SetTrigger("Hit");
     }
 
-    public void SetWood()
-    {
-        _stageSettings = GameController.Instance.CurrentStageSettings;
 
-        if (WoodSkin != null)
-            WoodSkin.sprite = _stageSettings.WoodSkin;
-        if (WoodSkinMask != null)
-            WoodSkinMask.sprite = _stageSettings.WoodSkin;
-
-        StartCoroutine(ReadyToAnimRoutine());
-
-        SpawnObject(KnifePrefab, _stageSettings.KnifesInWoodMinCount, _stageSettings.KnifesInWoodMaxCount, 100);
-        SpawnObject(ApplePrefab, _stageSettings.AppleAppearChance);
-    }
-
-    void SpawnObject(GameObject Prefab, int minCount = 0, int maxCount = 3, float spawnRate = 100)
+    void SpawnObject(GameObject Prefab, int minCount = 1, int maxCount = 3, float spawnRate = 100)
     {
         int count = Random.Range(minCount, maxCount);
 
@@ -56,7 +95,7 @@ public class Wood : MonoBehaviour
         {
             float safeOffset = 0.5f;
 
-            float spawnChance = Random.Range(0f, 100f);
+            float spawnChance = Random.Range(100f * i / count, 100f);
 
             if (spawnChance <= spawnRate)
             {
@@ -112,5 +151,42 @@ public class Wood : MonoBehaviour
     bool CheckSpawnPosition(Vector2 checkPosition)
     {
         return Physics2D.OverlapCircle(checkPosition, 0.2f);
+    }
+
+    public void DestroyWood()
+    {    
+        if (transform.GetComponentInChildren<Apple>() != null)
+        {
+            GameObject apple = FindObjectOfType<Apple>().gameObject;
+            apple.transform.parent = null;
+            VFX_Manager.Instance.PlayAppleCut(apple.transform.position);
+            Destroy(apple.gameObject);
+        }
+        StartCoroutine(DestroyWoodRoutine());
+    }
+
+    IEnumerator DestroyWoodRoutine()
+    {
+        Destroy(WoodSkinMask.gameObject);
+        foreach (var Child in transform.GetComponentsInChildren<Rigidbody2D>())
+        {
+            Child.bodyType = RigidbodyType2D.Dynamic;
+            Child.gravityScale = 1f;
+        }
+
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            if (transform.GetChild(0) != null)
+            {
+                Destroy(transform.GetChild(0).gameObject, 0.75f);
+                transform.GetChild(0).parent = null;
+            }
+        }
+
+        yield return new WaitForSeconds(0.1f);
+
+        GameController.Instance.IsStageComplited = true;
+
+        Destroy(gameObject);
     }
 }

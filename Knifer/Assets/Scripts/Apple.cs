@@ -8,6 +8,6 @@ public class Apple : MonoBehaviour
 
     private void Start()
     {
-        AppleCost = Random.Range(2, 4);
+        AppleCost = 1;
     }
 }

@@ -7,35 +7,49 @@ public class ThrowSystem : MonoBehaviour
 {
     public GameObject KnifePrefab;
     public Transform ThrowPoint;
+    public float ThrowDelay;
+    public int CountOfKnifes;
 
     private GameObject _knifeToThrow;
-    private float _interpolateAmount;    
 
-    void Start()
+    public void StartThrowSystem()
     {
+        CountOfKnifes = GameController.Instance.CurrentStageSettings.CountOfKnifes;
+
         StartCoroutine(SpawnKnifeRoutine());
+        StartCoroutine(ThrowRoutine());
     }
 
-
-    void Update()
+    IEnumerator ThrowRoutine()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1) && ThrowPoint != null && KnifePrefab != null && _knifeToThrow!=null)
+        while(GameController.Instance.IsGameStarted && !GameController.Instance.IsStageComplited)
         {
-            _knifeToThrow.GetComponent<KnifeMove>().Speed=15f;
+            if (Input.GetKeyDown(KeyCode.Alpha1) && ThrowPoint != null && KnifePrefab != null && _knifeToThrow != null)
+            {
+                _knifeToThrow.GetComponent<KnifeMove>().Speed = 15f;
 
-            _knifeToThrow = null;
+                CountOfKnifes--;
+                UIManager.Instance.ReduceNumberOfKnifes();
+
+                if (CountOfKnifes < 0)
+                    CountOfKnifes = 0;
+
+                _knifeToThrow = null;
+            }
+
+            yield return null;
         }
     }
 
     IEnumerator SpawnKnifeRoutine()
     {
-        while (GameController.Instance.IsGameStarted)
+        while (GameController.Instance.IsGameStarted && !GameController.Instance.IsStageComplited)
         {
-            if (_knifeToThrow == null )
+            if (_knifeToThrow == null)
             {
-                yield return new WaitForSeconds(0.25f);
+                yield return new WaitForSeconds(ThrowDelay);
 
-                if (GameController.Instance.IsGameStarted)
+                if (GameController.Instance.IsGameStarted && CountOfKnifes > 0)
                     _knifeToThrow = Instantiate(KnifePrefab, ThrowPoint.position, Quaternion.identity, ThrowPoint);
 
             }

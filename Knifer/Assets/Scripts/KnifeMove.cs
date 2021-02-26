@@ -4,10 +4,9 @@ using UnityEngine;
 
 public class KnifeMove : MonoBehaviour
 {
-    public GameObject VFX_Hit;
-
     public float Speed { get=>_speed; set=>_speed=value; }
 
+    [SerializeField] private bool _knifeInWood = false;
     private float _speed;
     private Rigidbody2D _rigidBody;
     private bool _isStuck;
@@ -15,27 +14,25 @@ public class KnifeMove : MonoBehaviour
     private float _rotation;
     private float _ricochetOffset;
     private float _deltaTime;
+    private Animator _animator;
+    private ThrowSystem _throwSystem;
 
-    private void Awake()
+    private void Start()
     {
         _speed = 0f;
         _rotation = 0f;
         _isStuck = false;
         _isRicochet = false;
         _deltaTime = 0f;
-    }
-
-    private void Start()
-    {
         _rigidBody = GetComponent<Rigidbody2D>();
+        _throwSystem = FindObjectOfType<ThrowSystem>();
+
+        if (GetComponent<Animator>())
+            GetComponent<Animator>().SetBool("ReadyToThrow", true);
+
     }
 
-    void Update()
-    {
-
-    }
-
-    private void FixedUpdate()
+    private void Update()
     {
         if (_isRicochet == false)
             _rigidBody.position += Vector2.up * _speed * Time.deltaTime;
@@ -44,48 +41,50 @@ public class KnifeMove : MonoBehaviour
         {
             _rigidBody.position += (Vector2.up * (-5f) + Vector2.right * _ricochetOffset) * Time.deltaTime;
 
-            _deltaTime =_deltaTime / 4f + Time.deltaTime;
+            _deltaTime = _deltaTime / 4f + Time.deltaTime;
 
             _rigidBody.SetRotation(Mathf.Lerp(_rigidBody.rotation, _rotation, _deltaTime));
+
+            Destroy(gameObject, 3f);
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.transform.CompareTag("Wood"))
+
+        ContactPoint2D contactPoint = collision.contacts[0];
+
+        Vector2 vfxHitPosition = contactPoint.point;
+
+        if (collision.transform.CompareTag("Wood") && !_isRicochet)
         {
             _speed = 0f;
-
             _isStuck = true;
-
             transform.parent = collision.transform;
 
             collision.transform.GetComponent<Wood>().HitImpact();
 
+            if (_knifeInWood == false)
+                VFX_Manager.Instance.PlayWoodHit(vfxHitPosition);
+
             _rigidBody.bodyType = RigidbodyType2D.Static;
+
+            if(_throwSystem.CountOfKnifes==0)
+            {
+                collision.transform.GetComponent<Wood>().DestroyWood();
+
+                _rotation = Random.Range(-540f, -180f);
+                _ricochetOffset = Random.Range(0f, 3f);
+
+                _isRicochet = true;
+            }
         }
 
-        else if (collision.transform.CompareTag("Knife") && _isStuck == false)
+        else if (collision.transform.CompareTag("Knife") && _isStuck == false && _isRicochet == false && _knifeInWood==false)
         {
-            ContactPoint2D contactPoint = collision.contacts[0];
+            VFX_Manager.Instance.PlayClank(vfxHitPosition);
 
-            Vector2 vfxHitPosition = contactPoint.point;
-
-            if(VFX_Hit!=null)
-            {
-                GameObject vfxHit = Instantiate(VFX_Hit, vfxHitPosition, Quaternion.identity);
-
-                ParticleSystem ps = vfxHit.GetComponent<ParticleSystem>();
-                if (ps == null)
-                {
-                    ParticleSystem psChild = vfxHit.transform.GetChild(0).GetComponent<ParticleSystem>();
-                    Destroy(vfxHit, psChild.main.duration);
-                }
-                else
-                    Destroy(vfxHit, ps.main.duration);
-            }
-
-            _rotation = Random.Range(-540f,-180f );
+            _rotation = Random.Range(-540f, -180f);
             _ricochetOffset = Random.Range(0f, 3f);
 
             _isRicochet = true;
@@ -93,10 +92,11 @@ public class KnifeMove : MonoBehaviour
             GameController.Instance.IsGameStarted = false;
         }
     }
-
+    
     private void OnTriggerEnter2D(Collider2D collision)
     {
         GameController.Instance.Apples += collision.GetComponent<Apple>().AppleCost;
+        VFX_Manager.Instance.PlayAppleCut(collision.transform.position);
         Destroy(collision.gameObject);
         UIManager.Instance.UpdateAppleCounter();
     }
