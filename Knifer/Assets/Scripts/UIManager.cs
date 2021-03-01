@@ -13,6 +13,7 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] ScreenFader ScreenFader;
     [SerializeField] RectTransform StagePanel;
     [SerializeField] Text StageNumber;
+    [SerializeField] Text CompleteText;
 
     int _countOfKnifesLeft;
 
@@ -25,10 +26,49 @@ public class UIManager : Singleton<UIManager>
     public void SetupCountKnifes()
     {
         if (KnifeCountPanel != null && KnifeImagePrefab != null)
+
             for (int i = 0; i < GameController.Instance.CurrentStageSettings.CountOfKnifes; i++)
             {
                 Instantiate(KnifeImagePrefab, KnifeCountPanel);
             }
+    }
+
+    public void ClearCountKnifesPanel()
+    {
+        if (KnifeCountPanel.childCount > 0)
+            for (int i = 0; i < KnifeCountPanel.childCount; i++)
+            {
+                Destroy(KnifeCountPanel.GetChild(i).gameObject);
+            }
+    }
+    
+    public void ShowBossMessage(bool show)
+    {
+        CompleteText.text = "Boss!";
+
+        ShowMessageOfEndStage(show);
+    }
+
+    public void ShowWinMessage(bool show)
+    {
+        CompleteText.text = "Win!";
+
+        ShowMessageOfEndStage(show);
+    }
+
+    public void ShowLoseMessage(bool show)
+    {
+        CompleteText.text = "Lose";
+
+        ShowMessageOfEndStage(show);
+    }
+
+    private void ShowMessageOfEndStage(bool show)
+    {
+        if (show)
+            CompleteText.GetComponent<RectXMover>().MoveOn();
+        else
+            CompleteText.GetComponent<RectXMover>().MoveOff();
     }
 
     public void ReduceNumberOfKnifes()

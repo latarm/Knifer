@@ -20,10 +20,11 @@ public class GameController : Singleton<GameController>
     private bool _isGameOver = false;
 
     private ThrowSystem _throwSystem;
-    private Wood _wood;
+    [SerializeField] private Wood _wood;
     private GameData _gameData;
     private int _stageIndex;
     private int _playerRecordStage;
+    private bool _endGame;
 
     public override void Awake()
     {
@@ -34,6 +35,7 @@ public class GameController : Singleton<GameController>
         _wood = FindObjectOfType<Wood>();
         _gameData = GetComponent<GameData>();
         CurrentStageSettings = _gameData.StagesSettings[_stageIndex];
+        _endGame = false;
     }
 
     private void Start()
@@ -42,6 +44,7 @@ public class GameController : Singleton<GameController>
 
         UIManager.Instance.UpdateAppleCounter();
         UIManager.Instance.ActiveStagePanel(false);
+        UIManager.Instance.UpdateRecordText();
 
         StartCoroutine(ExecuteGameLoop());
 
@@ -96,42 +99,100 @@ public class GameController : Singleton<GameController>
     IEnumerator PlayGameRoutine()
     {
         UIManager.Instance.UpdateStageNumber(_stageIndex + 1);
+        _endGame = false;
 
         while (_isGameStarted)
         {           
-            while(!IsStageComplited && _isGameStarted)
+            while(!IsStageComplited && _isGameStarted) // Gameplay
             {
                 yield return null;
             }
 
-            VFX_Manager.Instance.PlayCrackWood(WoodPosition.position);
-
-            yield return new WaitForSeconds(1f);
-
-            NextStage();
-
-            if(_stageIndex==_gameData.StagesSettings.Length)
+            if (IsStageComplited && _isGameStarted) // Next stage
             {
+                VFX_Manager.Instance.PlayCrackWood(WoodPosition.position);
+
+                yield return new WaitForSeconds(1f);
+
+                NextStage();
+
+                if(CurrentStageSettings.IsBoss)
+                {
+                    UIManager.Instance.ShowBossMessage(true);
+                    yield return new WaitForSeconds(1f);
+                    UIManager.Instance.ShowBossMessage(false);
+                }
+
+                if (_stageIndex == _gameData.StagesSettings.Length)
+                {
+                    _isGameStarted = false;
+                    _isGameOver = true;
+                    yield return null;
+                }
+
+                UIManager.Instance.UpdateStageNumber(_stageIndex + 1);
+
+                IsStageComplited = false;
+
+                if (WoodPrefab != null)
+                {
+                    SetupWood();
+                }
+                UIManager.Instance.ClearCountKnifesPanel();
+
+                UIManager.Instance.SetupCountKnifes();
+
+                _throwSystem.StartThrowSystem();
+
+            }            
+
+            else if(!IsStageComplited && !_isGameStarted) // Lose
+            {
+                UIManager.Instance.ShowLoseMessage(true);
+
+                yield return new WaitForSeconds(1.5f);
+
+                Destroy(_wood.gameObject);
+
+                UIManager.Instance.ShowLoseMessage(false);
+
+                yield return new WaitForSeconds(0.5f);
+
+                UIManager.Instance.ActiveStagePanel(false);
+
+                if (_playerRecordStage < _stageIndex)
+                    Player.Instance.RecordStage = _stageIndex;  // Record is previous stage
+
+                UIManager.Instance.UpdateRecordText();
+            }
+
+            if (_endGame)
+            {
+                if (_playerRecordStage < _stageIndex + 1)
+                    Player.Instance.RecordStage = _stageIndex + 1; // Record is last stage
+
+                UIManager.Instance.UpdateRecordText();
+
                 _isGameStarted = false;
-                _isGameOver = true;
-                yield return null;
+
+                UIManager.Instance.ShowWinMessage(true);
+
+                yield return new WaitForSeconds(2.5f);
+
+                UIManager.Instance.ShowWinMessage(false);
+
+                yield return new WaitForSeconds(0.5f);
             }
-
-            UIManager.Instance.UpdateStageNumber(_stageIndex + 1);
-
-            if (WoodPrefab != null)
-            {
-                SetupWood();
-            }
-
-            UIManager.Instance.SetupCountKnifes();
-
-            _throwSystem.StartThrowSystem();
         }
     }
 
     IEnumerator GameOverRoutine()
     {
+        if (_wood.gameObject != null)
+            Destroy(_wood.gameObject);
+
+        UIManager.Instance.ClearCountKnifesPanel();
+
         IsReadyToBegin = true;
 
         UIManager.Instance.ScreenFadeOn();
@@ -140,12 +201,7 @@ public class GameController : Singleton<GameController>
         yield return new WaitForSeconds(0.5f);
         UIManager.Instance.ScreenFadeOff();
 
-        if (_playerRecordStage < _stageIndex + 1)
-            Player.Instance.RecordStage = _stageIndex + 1;
-
         Player.Instance.Apples = Apples;
-
-        UIManager.Instance.UpdateRecordText();
 
         _stageIndex = 0;
 
@@ -163,7 +219,10 @@ public class GameController : Singleton<GameController>
         _stageIndex++;
 
         if (_stageIndex == _gameData.StagesSettings.Length)
+        {
             _stageIndex = 0;
+            _endGame = true;
+        }
 
         CurrentStageSettings = _gameData.StagesSettings[_stageIndex];
     }

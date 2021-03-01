@@ -11,5 +11,16 @@ public class Player : Singleton<Player>
     private int _recordStage;
 
 
+    public override void Awake()
+    {
+        base.Awake();
+        _recordStage = 0;
+        _apples = 0;
+    }
 
+
+    void SaveCurrentState()
+    {
+        JsonUtility.ToJson(gameObject);
+    }
 }

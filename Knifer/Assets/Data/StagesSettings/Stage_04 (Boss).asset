@@ -17,7 +17,7 @@ MonoBehaviour:
   WoodParts: {fileID: 2800000, guid: 5e620966dbc76db408545acc312b8d58, type: 3}
   WoodRotationSpeed: 0.5
   TimeOfRotationSlowing: 1.5
-  KnifesInWoodMinCount: 2
+  KnifesInWoodMinCount: 3
   KnifesInWoodMaxCount: 5
   AppleAppearChance: 25
   CountOfKnifes: 6

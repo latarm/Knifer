@@ -10,6 +10,8 @@ public class Wood : MonoBehaviour
     public GameObject KnifePrefab;
     public Material WoodCrackMaterial;
 
+    public int KnifeCount;
+
     Animator _animator;
     StageSettingsData _stageSettings;
     bool _readyToAnimation;
@@ -40,8 +42,6 @@ public class Wood : MonoBehaviour
         SpawnObject(ApplePrefab, _stageSettings.AppleAppearChance);
 
         StartCoroutine(RotateWoodRoutine());
-
-        GameController.Instance.IsStageComplited = false;
     }
 
     IEnumerator RotateWoodRoutine()
@@ -87,7 +87,7 @@ public class Wood : MonoBehaviour
     }
 
 
-    void SpawnObject(GameObject Prefab, int minCount = 1, int maxCount = 3, float spawnRate = 100)
+    void SpawnObject(GameObject Prefab, int minCount = 1, int maxCount = 3, float spawnRate = 100f)
     {
         int count = Random.Range(minCount, maxCount);
 
@@ -95,9 +95,9 @@ public class Wood : MonoBehaviour
         {
             float safeOffset = 0.5f;
 
-            float spawnChance = Random.Range(100f * i / count, 100f);
+            float spawnChance = Random.Range(spawnRate * i / count, spawnRate);
 
-            if (spawnChance <= spawnRate)
+            if (spawnChance >= spawnRate/count)
             {
                 float randomAngle = Random.Range((i * Mathf.PI * 2 + safeOffset) / count, Mathf.PI * 2 * (count + i - safeOffset) / count);
                 float x = transform.position.x + Mathf.Cos(randomAngle);
@@ -153,7 +153,7 @@ public class Wood : MonoBehaviour
         return Physics2D.OverlapCircle(checkPosition, 0.2f);
     }
 
-    public void DestroyWood()
+    public void DestroyWood(float delay)
     {    
         if (transform.GetComponentInChildren<Apple>() != null)
         {
@@ -162,12 +162,13 @@ public class Wood : MonoBehaviour
             VFX_Manager.Instance.PlayAppleCut(apple.transform.position);
             Destroy(apple.gameObject);
         }
-        StartCoroutine(DestroyWoodRoutine());
+        StartCoroutine(DestroyWoodRoutine(delay));
     }
 
-    IEnumerator DestroyWoodRoutine()
+    IEnumerator DestroyWoodRoutine(float delay)
     {
         Destroy(WoodSkinMask.gameObject);
+
         foreach (var Child in transform.GetComponentsInChildren<Rigidbody2D>())
         {
             Child.bodyType = RigidbodyType2D.Dynamic;
@@ -178,7 +179,7 @@ public class Wood : MonoBehaviour
         {
             if (transform.GetChild(0) != null)
             {
-                Destroy(transform.GetChild(0).gameObject, 0.75f);
+                Destroy(transform.GetChild(0).gameObject, delay);
                 transform.GetChild(0).parent = null;
             }
         }

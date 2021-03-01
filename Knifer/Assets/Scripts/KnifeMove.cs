@@ -71,12 +71,14 @@ public class KnifeMove : MonoBehaviour
 
             if(_throwSystem.CountOfKnifes==0)
             {
-                collision.transform.GetComponent<Wood>().DestroyWood();
+                collision.transform.GetComponent<Wood>().DestroyWood(0.75f);
 
                 _rotation = Random.Range(-540f, -180f);
                 _ricochetOffset = Random.Range(0f, 3f);
 
                 _isRicochet = true;
+
+                GameController.Instance.IsStageComplited = true;
             }
         }
 
