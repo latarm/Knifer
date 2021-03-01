@@ -15,7 +15,6 @@ public class Wood : MonoBehaviour
     Animator _animator;
     StageSettingsData _stageSettings;
     bool _readyToAnimation;
-    float _rotationSpeed;
     float _deltaTime=0f;
     float _baseSpeed;
     float _targetSpeed;

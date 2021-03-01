@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class GameController : Singleton<GameController>
 {
     public int Apples = 0;
@@ -40,7 +41,10 @@ public class GameController : Singleton<GameController>
 
     private void Start()
     {
+        Player.Instance.Load();
+
         _playerRecordStage = Player.Instance.RecordStage;
+        Apples = Player.Instance.Apples;
 
         UIManager.Instance.UpdateAppleCounter();
         UIManager.Instance.ActiveStagePanel(false);
@@ -161,7 +165,10 @@ public class GameController : Singleton<GameController>
                 UIManager.Instance.ActiveStagePanel(false);
 
                 if (_playerRecordStage < _stageIndex)
+                {
+                    _playerRecordStage = _stageIndex;
                     Player.Instance.RecordStage = _stageIndex;  // Record is previous stage
+                }
 
                 UIManager.Instance.UpdateRecordText();
             }
@@ -169,7 +176,10 @@ public class GameController : Singleton<GameController>
             if (_endGame)
             {
                 if (_playerRecordStage < _stageIndex + 1)
+                {
+                    _playerRecordStage = _stageIndex + 1;
                     Player.Instance.RecordStage = _stageIndex + 1; // Record is last stage
+                }
 
                 UIManager.Instance.UpdateRecordText();
 
@@ -188,8 +198,10 @@ public class GameController : Singleton<GameController>
 
     IEnumerator GameOverRoutine()
     {
-        if (_wood.gameObject != null)
-            Destroy(_wood.gameObject);
+
+        Player.Instance.Apples = Apples;
+        Player.Instance.RecordStage = _playerRecordStage;
+        Player.Instance.Save();
 
         UIManager.Instance.ClearCountKnifesPanel();
 
@@ -200,8 +212,6 @@ public class GameController : Singleton<GameController>
         UIManager.Instance.MoveMainMenuOn();
         yield return new WaitForSeconds(0.5f);
         UIManager.Instance.ScreenFadeOff();
-
-        Player.Instance.Apples = Apples;
 
         _stageIndex = 0;
 
