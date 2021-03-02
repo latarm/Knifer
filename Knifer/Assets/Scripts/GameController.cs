@@ -4,7 +4,7 @@ using UnityEngine;
 
 
 public class GameController : Singleton<GameController>
-{
+{    
     public int Apples = 0;
     public GameObject WoodPrefab;
     public Transform WoodPosition;
@@ -21,11 +21,12 @@ public class GameController : Singleton<GameController>
     private bool _isGameOver = false;
 
     private ThrowSystem _throwSystem;
-    [SerializeField] private Wood _wood;
+    private Wood _wood;
     private GameData _gameData;
     private int _stageIndex;
     private int _playerRecordStage;
     private bool _endGame;
+    private UIManager _uiManager;
 
     public override void Awake()
     {
@@ -41,18 +42,26 @@ public class GameController : Singleton<GameController>
 
     private void Start()
     {
+        Vibration.Init();
+        _uiManager = UIManager.Instance;
+
         Player.Instance.Load();
 
         _playerRecordStage = Player.Instance.RecordStage;
         Apples = Player.Instance.Apples;
 
-        UIManager.Instance.UpdateAppleCounter();
-        UIManager.Instance.ActiveStagePanel(false);
-        UIManager.Instance.UpdateRecordText();
+
+
+        _uiManager.ActiveThrowButton(false);
+        _uiManager.UpdateAppleCounter();
+        _uiManager.ActiveStagePanel(false);
+        _uiManager.UpdateRecordText();
+        _uiManager.UpdateSkinsPanel();
+
 
         StartCoroutine(ExecuteGameLoop());
 
-        UIManager.Instance.MoveMainMenuOn();
+        _uiManager.MoveMainMenuOn();
     }
 
     IEnumerator ExecuteGameLoop()
@@ -73,16 +82,16 @@ public class GameController : Singleton<GameController>
             yield return null;
         }
 
-        UIManager.Instance.MoveMainMenuOff();
+        _uiManager.MoveMainMenuOff();
 
-        UIManager.Instance.ScreenFadeOn();
+        _uiManager.ScreenFadeOn();
 
         yield return new WaitForSeconds(0.5f);
     }
 
     IEnumerator StartGameRoutine(float delay)
     {
-        UIManager.Instance.ScreenFadeOff();
+        _uiManager.ScreenFadeOff();
 
         _isGameStarted = true;
 
@@ -91,18 +100,20 @@ public class GameController : Singleton<GameController>
             SetupWood();
         }
 
-        UIManager.Instance.SetupCountKnifes();
+        _uiManager.SetupCountKnifes();
 
         _throwSystem.StartThrowSystem();
 
         yield return new WaitForSeconds(delay);
 
-        UIManager.Instance.ActiveStagePanel(true);
+        _uiManager.ActiveStagePanel(true);
+
+        _uiManager.ActiveThrowButton(true);
     }
 
     IEnumerator PlayGameRoutine()
     {
-        UIManager.Instance.UpdateStageNumber(_stageIndex + 1);
+        _uiManager.UpdateStageNumber(_stageIndex + 1);
         _endGame = false;
 
         while (_isGameStarted)
@@ -122,9 +133,9 @@ public class GameController : Singleton<GameController>
 
                 if(CurrentStageSettings.IsBoss)
                 {
-                    UIManager.Instance.ShowBossMessage(true);
+                    _uiManager.ShowBossMessage(true);
                     yield return new WaitForSeconds(1f);
-                    UIManager.Instance.ShowBossMessage(false);
+                    _uiManager.ShowBossMessage(false);
                 }
 
                 if (_stageIndex == _gameData.StagesSettings.Length)
@@ -134,7 +145,7 @@ public class GameController : Singleton<GameController>
                     yield return null;
                 }
 
-                UIManager.Instance.UpdateStageNumber(_stageIndex + 1);
+                _uiManager.UpdateStageNumber(_stageIndex + 1);
 
                 IsStageComplited = false;
 
@@ -142,9 +153,9 @@ public class GameController : Singleton<GameController>
                 {
                     SetupWood();
                 }
-                UIManager.Instance.ClearCountKnifesPanel();
+                _uiManager.ClearCountKnifesPanel();
 
-                UIManager.Instance.SetupCountKnifes();
+                _uiManager.SetupCountKnifes();
 
                 _throwSystem.StartThrowSystem();
 
@@ -152,17 +163,17 @@ public class GameController : Singleton<GameController>
 
             else if(!IsStageComplited && !_isGameStarted) // Lose
             {
-                UIManager.Instance.ShowLoseMessage(true);
+                _uiManager.ShowLoseMessage(true);
 
                 yield return new WaitForSeconds(1.5f);
 
                 Destroy(_wood.gameObject);
 
-                UIManager.Instance.ShowLoseMessage(false);
+                _uiManager.ShowLoseMessage(false);
 
                 yield return new WaitForSeconds(0.5f);
 
-                UIManager.Instance.ActiveStagePanel(false);
+                _uiManager.ActiveStagePanel(false);
 
                 if (_playerRecordStage < _stageIndex)
                 {
@@ -170,7 +181,7 @@ public class GameController : Singleton<GameController>
                     Player.Instance.RecordStage = _stageIndex;  // Record is previous stage
                 }
 
-                UIManager.Instance.UpdateRecordText();
+                _uiManager.UpdateRecordText();
             }
 
             if (_endGame)
@@ -181,15 +192,15 @@ public class GameController : Singleton<GameController>
                     Player.Instance.RecordStage = _stageIndex + 1; // Record is last stage
                 }
 
-                UIManager.Instance.UpdateRecordText();
+                _uiManager.UpdateRecordText();
 
                 _isGameStarted = false;
 
-                UIManager.Instance.ShowWinMessage(true);
+                _uiManager.ShowWinMessage(true);
 
                 yield return new WaitForSeconds(2.5f);
 
-                UIManager.Instance.ShowWinMessage(false);
+                _uiManager.ShowWinMessage(false);
 
                 yield return new WaitForSeconds(0.5f);
             }
@@ -198,20 +209,23 @@ public class GameController : Singleton<GameController>
 
     IEnumerator GameOverRoutine()
     {
+        _uiManager.ActiveThrowButton(false);
+
+        _uiManager.UpdateSkinsPanel();
 
         Player.Instance.Apples = Apples;
         Player.Instance.RecordStage = _playerRecordStage;
         Player.Instance.Save();
 
-        UIManager.Instance.ClearCountKnifesPanel();
+        _uiManager.ClearCountKnifesPanel();
 
         IsReadyToBegin = true;
 
-        UIManager.Instance.ScreenFadeOn();
+        _uiManager.ScreenFadeOn();
         yield return new WaitForSeconds(0.5f);
-        UIManager.Instance.MoveMainMenuOn();
+        _uiManager.MoveMainMenuOn();
         yield return new WaitForSeconds(0.5f);
-        UIManager.Instance.ScreenFadeOff();
+        _uiManager.ScreenFadeOff();
 
         _stageIndex = 0;
 
@@ -249,5 +263,10 @@ public class GameController : Singleton<GameController>
         GameObject Wood = Instantiate(WoodPrefab, WoodPosition);
         _wood = Wood.GetComponent<Wood>();
         _wood.SetWood();
+    }
+
+    public void QuitApp()
+    {
+        Application.Quit();
     }
 }

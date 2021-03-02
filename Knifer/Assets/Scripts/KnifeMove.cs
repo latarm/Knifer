@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class KnifeMove : MonoBehaviour
 {
@@ -69,29 +70,38 @@ public class KnifeMove : MonoBehaviour
 
             _rigidBody.bodyType = RigidbodyType2D.Static;
 
+            Vibration.Vibrate(75);
+
             if(_throwSystem.CountOfKnifes==0)
             {
                 collision.transform.GetComponent<Wood>().DestroyWood(0.75f);
 
-                _rotation = Random.Range(-540f, -180f);
-                _ricochetOffset = Random.Range(0f, 3f);
+                _rotation = UnityEngine.Random.Range(-540f, -180f);
+                _ricochetOffset = UnityEngine.Random.Range(0f, 3f);
 
                 _isRicochet = true;
+
+                long[] pattern = new long[] { 0, 200, 250, 500 };
+
+                Vibration.Vibrate(pattern, -1);
 
                 GameController.Instance.IsStageComplited = true;
             }
         }
 
+
         else if (collision.transform.CompareTag("Knife") && _isStuck == false && _isRicochet == false && _knifeInWood==false)
         {
             VFX_Manager.Instance.PlayClank(vfxHitPosition);
 
-            _rotation = Random.Range(-540f, -180f);
-            _ricochetOffset = Random.Range(0f, 3f);
+            _rotation = UnityEngine.Random.Range(-540f, -180f);
+            _ricochetOffset = UnityEngine.Random.Range(0f, 3f);
 
             _isRicochet = true;
 
             GameController.Instance.IsGameStarted = false;
+
+            Vibration.VibrateNope();
         }
     }
     

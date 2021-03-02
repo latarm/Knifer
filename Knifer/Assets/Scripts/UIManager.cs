@@ -14,6 +14,9 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] RectTransform StagePanel;
     [SerializeField] Text StageNumber;
     [SerializeField] Text CompleteText;
+    [SerializeField] Button ThrowButton;
+    [SerializeField] RectTransform SkinsPanel;
+    [SerializeField] GameObject SkinPref;
 
     int _countOfKnifesLeft;
 
@@ -31,6 +34,37 @@ public class UIManager : Singleton<UIManager>
             {
                 Instantiate(KnifeImagePrefab, KnifeCountPanel);
             }
+    }
+
+    public void UpdateSkinsPanel()
+    {
+        for (int i = 0; i < SkinsPanel.childCount; i++)
+        {
+            Destroy(SkinsPanel.GetChild(i).gameObject);
+        }
+
+        for (int i = 0; i < GameData.Instance.KnifeSkins.Length; i++)
+        {
+            int index = i;
+            GameObject skin = Instantiate(SkinPref, SkinsPanel.transform);
+            skin.name = "Knife_" + "0" + i.ToString();
+            Image skinImage = skin.GetComponent<Image>();
+
+            skinImage.sprite = GameData.Instance.KnifeSkins[i].Skin;
+
+            skin.GetComponent<Button>().onClick.AddListener(() => GameData.Instance.SelectSkin(index));
+
+            if (!GameData.Instance.KnifeSkins[i].CheckAvailability())
+            {
+                skin.GetComponent<Button>().interactable = false;
+                skinImage.color = Color.black;
+            }
+        }
+    }
+
+    public void ActiveThrowButton(bool active)
+    {
+        ThrowButton.interactable = active;
     }
 
     public void ClearCountKnifesPanel()

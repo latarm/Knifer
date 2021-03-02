@@ -8,16 +8,18 @@ public class ThrowSystem : MonoBehaviour
     public GameObject KnifePrefab;
     public Transform ThrowPoint;
     public float ThrowDelay;
-    public int CountOfKnifes;
+    [HideInInspector] public int CountOfKnifes;
 
     private GameObject _knifeToThrow;
+    private Sprite _knifeSkin;
 
     public void StartThrowSystem()
     {
         CountOfKnifes = GameController.Instance.CurrentStageSettings.CountOfKnifes;
 
         StartCoroutine(SpawnKnifeRoutine());
-        StartCoroutine(ThrowRoutine());
+
+        _knifeSkin = GameData.Instance.SelectedSkin();
     }
 
     IEnumerator ThrowRoutine()
@@ -41,6 +43,19 @@ public class ThrowSystem : MonoBehaviour
         }
     }
 
+    public void ThrowKnife()
+    {
+        _knifeToThrow.GetComponent<KnifeMove>().Speed = 15f;
+
+        CountOfKnifes--;
+        UIManager.Instance.ReduceNumberOfKnifes();
+
+        if (CountOfKnifes < 0)
+            CountOfKnifes = 0;
+
+        _knifeToThrow = null;
+    }
+
     IEnumerator SpawnKnifeRoutine()
     {
         while (GameController.Instance.IsGameStarted && !GameController.Instance.IsStageComplited)
@@ -50,8 +65,10 @@ public class ThrowSystem : MonoBehaviour
                 yield return new WaitForSeconds(ThrowDelay);
 
                 if (GameController.Instance.IsGameStarted && CountOfKnifes > 0)
+                {
                     _knifeToThrow = Instantiate(KnifePrefab, ThrowPoint.position, Quaternion.identity, ThrowPoint);
-
+                    _knifeToThrow.GetComponent<SpriteRenderer>().sprite = _knifeSkin;
+                }
             }
             else
             {

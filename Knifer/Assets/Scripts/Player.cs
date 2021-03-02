@@ -10,6 +10,9 @@ public class Player : Singleton<Player>
 
     private int _apples;
     private int _recordStage;
+    private bool _completeFirstStage;
+    private bool _winFirstBoss;
+    private bool _winLastBoss;
 
     PlayerData _playerData;
 
